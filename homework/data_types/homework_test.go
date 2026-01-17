@@ -13,11 +13,25 @@ import (
 
 func ToLittleEndian[T uint16 | uint32 | uint64](number T) T {
 	var res T
-	size := int(unsafe.Sizeof(number))
-
-	for i := range size {
-		byte := (number >> (8 * i)) & 0xFF
-		res |= byte << (8 * (size - 1 - i))
+	switch unsafe.Sizeof(number) {
+	case 2:
+		res = (number >> 8) | (number << 8)
+	case 4:
+		n := uint32(number)
+		res = T(((n >> 24) & 0xFF) |
+			((n >> 8) & 0xFF00) |
+			((n << 8) & 0xFF0000) |
+			((n << 24) & 0xFF000000))
+	case 8:
+		n := uint64(number)
+		res = T(((n >> 56) & 0xFF) |
+			((n >> 40) & 0xFF00) |
+			((n >> 24) & 0xFF0000) |
+			((n >> 8) & 0xFF000000) |
+			((n << 8) & 0xFF00000000) |
+			((n << 24) & 0xFF0000000000) |
+			((n << 40) & 0xFF000000000000) |
+			((n << 56) & 0xFF00000000000000))
 	}
 
 	return res
