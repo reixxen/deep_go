@@ -15,14 +15,16 @@ type CircularQueue struct {
 	values []int
 	front  int
 	rear   int
+	isFull bool
 }
 
 // создать очередь с определенным размером буффера
 func NewCircularQueue(size int) CircularQueue {
 	return CircularQueue{
 		values: make([]int, size),
-		front:  -1,
-		rear:   -1,
+		front:  0,
+		rear:   0,
+		isFull: false,
 	}
 }
 
@@ -31,14 +33,11 @@ func (q *CircularQueue) Push(value int) bool {
 	if q.Full() {
 		return false
 	}
-	if q.Empty() {
-		q.front = 0
-		q.rear = 0
-		q.values[q.rear] = value
-		return true
-	}
-	q.rear = (q.rear + 1) % len(q.values)
 	q.values[q.rear] = value
+	q.rear = (q.rear + 1) % len(q.values)
+	if q.rear == q.front {
+		q.isFull = true
+	}
 	return true
 }
 
@@ -47,12 +46,8 @@ func (q *CircularQueue) Pop() bool {
 	if q.Empty() {
 		return false
 	}
-	if q.front == q.rear {
-		q.front = -1
-		q.rear = -1
-		return true
-	}
 	q.front = (q.front + 1) % len(q.values)
+	q.isFull = false
 	return true
 }
 
@@ -69,17 +64,18 @@ func (q *CircularQueue) Back() int {
 	if q.Empty() {
 		return -1
 	}
-	return q.values[q.rear]
+	lastIdx := (q.rear - 1 + len(q.values)) % len(q.values)
+	return q.values[lastIdx]
 }
 
 // проверить пустая ли очередь
 func (q *CircularQueue) Empty() bool {
-	return q.front == -1
+	return !q.isFull && (q.front == q.rear)
 }
 
 // проверить заполнена ли очередь
 func (q *CircularQueue) Full() bool {
-	return (q.rear+1)%len(q.values) == q.front
+	return q.isFull
 }
 
 func TestCircularQueue(t *testing.T) {
