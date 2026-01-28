@@ -52,11 +52,7 @@ func (b *COWBuffer) Update(index int, value byte) bool {
 		newData := make([]byte, len(b.data))
 		copy(newData, b.data)
 		*b.refs--
-
-		newRefs := new(int)
-		*newRefs = 1
-		b.data = newData
-		b.refs = newRefs
+		*b = NewCOWBuffer(newData)
 	}
 
 	b.data[index] = value
