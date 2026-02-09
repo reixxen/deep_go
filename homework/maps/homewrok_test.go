@@ -9,32 +9,132 @@ import (
 
 // go test -v homework_test.go
 
+type node struct {
+	key   int
+	value int
+	left  *node
+	right *node
+}
+
 type OrderedMap struct {
-	// need to implement
+	root *node
+	size int
 }
 
+// создать упорядоченный словарь
 func NewOrderedMap() OrderedMap {
-	return OrderedMap{} // need to implement
+	return OrderedMap{}
 }
 
+// добавить элемент в словарь
 func (m *OrderedMap) Insert(key, value int) {
-	// need to implement
+	m.root = m.insert(m.root, key, value)
 }
 
+// удалить элемент из словари
 func (m *OrderedMap) Erase(key int) {
-	// need to implement
+	m.root = m.erase(m.root, key)
 }
 
+// проверить существование элемента в словаре
 func (m *OrderedMap) Contains(key int) bool {
-	return false // need to implement
+	current := m.root
+	for current != nil {
+		if key == current.key {
+			return true
+		}
+		if key < current.key {
+			current = current.left
+		} else {
+			current = current.right
+		}
+	}
+	return false
 }
 
+// получить количество элементов в словаре
 func (m *OrderedMap) Size() int {
-	return 0 // need to implement
+	return m.size
 }
 
+// применить функцию к каждому элементу словаря от меньшего к большему
 func (m *OrderedMap) ForEach(action func(int, int)) {
-	// need to implement
+	nodes := []*node{}
+	current := m.root
+
+	for current != nil || len(nodes) > 0 {
+		for current != nil {
+			nodes = append(nodes, current)
+			current = current.left
+		}
+		current = nodes[len(nodes)-1]
+		nodes = nodes[:len(nodes)-1]
+		action(current.key, current.value)
+		current = current.right
+	}
+}
+
+func (m *OrderedMap) insert(n *node, key, value int) *node {
+	if n == nil {
+		n = &node{key: key, value: value}
+		m.size++
+		return n
+	}
+
+	if key < n.key {
+		n.left = m.insert(n.left, key, value)
+	} else if key > n.key {
+		n.right = m.insert(n.right, key, value)
+	} else {
+		n.value = value
+	}
+
+	return n
+}
+
+func (m *OrderedMap) erase(n *node, key int) *node {
+	if n == nil {
+		return nil
+	}
+
+	if key < n.key {
+		n.left = m.erase(n.left, key)
+	} else if key > n.key {
+		n.right = m.erase(n.right, key)
+	} else {
+		m.size--
+		if n.left == nil {
+			return n.right
+		}
+		if n.right == nil {
+			return n.left
+		}
+
+		min := m.findMin(n.right)
+		n.key = min.key
+		n.value = min.value
+		n.right = m.deleteMin(n.right)
+	}
+
+	return n
+}
+
+func (m *OrderedMap) findMin(n *node) *node {
+	if n == nil {
+		return nil
+	}
+	for n.left != nil {
+		n = n.left
+	}
+	return n
+}
+
+func (m *OrderedMap) deleteMin(n *node) *node {
+	if n.left == nil {
+		return n.right
+	}
+	n.left = m.deleteMin(n.left)
+	return n
 }
 
 func TestCircularQueue(t *testing.T) {
