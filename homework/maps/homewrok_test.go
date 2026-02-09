@@ -23,101 +23,17 @@ type OrderedMap struct {
 
 // создать упорядоченный словарь
 func NewOrderedMap() OrderedMap {
-	return OrderedMap{
-		root: nil,
-		size: 0,
-	}
+	return OrderedMap{}
 }
 
 // добавить элемент в словарь
 func (m *OrderedMap) Insert(key, value int) {
-	if m.root == nil {
-		m.root = &node{key: key, value: value}
-		m.size++
-		return
-	}
-
-	current := m.root
-	for current != nil {
-		if key < current.key {
-			if current.left == nil {
-				current.left = &node{key: key, value: value}
-				m.size++
-				return
-			}
-			current = current.left
-		} else if key > current.key {
-			if current.right == nil {
-				current.right = &node{key: key, value: value}
-				m.size++
-				return
-			}
-			current = current.right
-		} else {
-			current.value = value
-			return
-		}
-	}
+	m.root = m.insert(m.root, key, value)
 }
 
 // удалить элемент из словари
 func (m *OrderedMap) Erase(key int) {
-	if m.root == nil {
-		return
-	}
-
-	parent := &node{}
-	current := m.root
-
-	// find a node and its parent
-	for current != nil && current.key != key {
-		parent = current
-		if key < current.key {
-			current = current.left
-		} else {
-			current = current.right
-		}
-	}
-
-	if current == nil {
-		return
-	}
-
-	// node has 2 childs
-	if current.left != nil && current.right != nil {
-		minRightParent := current
-		minRight := current.right
-
-		for minRight.left != nil {
-			minRightParent = minRight
-			minRight = minRight.left
-		}
-
-		current.key = minRight.key
-		current.value = minRight.value
-
-		current = minRight
-		parent = minRightParent
-	}
-
-	// node has 0 or 1 child
-	child := &node{}
-	if current.left != nil {
-		child = current.left
-	} else {
-		child = current.right
-	}
-
-	// if we delete the root
-	if parent == nil {
-		m.root = child
-	} else if parent.left == current {
-		parent.left = child
-	} else {
-		parent.right = child
-	}
-
-	m.size--
+	m.root = m.erase(m.root, key)
 }
 
 // проверить существование элемента в словаре
@@ -156,6 +72,69 @@ func (m *OrderedMap) ForEach(action func(int, int)) {
 		action(current.key, current.value)
 		current = current.right
 	}
+}
+
+func (m *OrderedMap) insert(n *node, key, value int) *node {
+	if n == nil {
+		n = &node{key: key, value: value}
+		m.size++
+		return n
+	}
+
+	if key < n.key {
+		n.left = m.insert(n.left, key, value)
+	} else if key > n.key {
+		n.right = m.insert(n.right, key, value)
+	} else {
+		n.value = value
+	}
+
+	return n
+}
+
+func (m *OrderedMap) erase(n *node, key int) *node {
+	if n == nil {
+		return nil
+	}
+
+	if key < n.key {
+		n.left = m.erase(n.left, key)
+	} else if key > n.key {
+		n.right = m.erase(n.right, key)
+	} else {
+		m.size--
+		if n.left == nil {
+			return n.right
+		}
+		if n.right == nil {
+			return n.left
+		}
+
+		min := m.findMin(n.right)
+		n.key = min.key
+		n.value = min.value
+		n.right = m.deleteMin(n.right)
+	}
+
+	return n
+}
+
+func (m *OrderedMap) findMin(n *node) *node {
+	if n == nil {
+		return nil
+	}
+	for n.left != nil {
+		n = n.left
+	}
+	return n
+}
+
+func (m *OrderedMap) deleteMin(n *node) *node {
+	if n.left == nil {
+		return n.right
+	}
+	n.left = m.deleteMin(n.left)
+	return n
 }
 
 func TestCircularQueue(t *testing.T) {
